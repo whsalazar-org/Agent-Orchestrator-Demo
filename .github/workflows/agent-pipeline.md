@@ -24,7 +24,7 @@ engine: copilot
 
 network: defaults
 
-timeout_minutes: 30
+timeout-minutes: 30
 
 tools:
   github:
