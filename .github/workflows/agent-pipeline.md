@@ -1,5 +1,5 @@
 ---
-on:
+"on":
   issues:
     types: [labeled]
   workflow_dispatch:
@@ -7,39 +7,35 @@ on:
       title:
         description: "Work item title fed to the pipeline as the request"
         required: true
+        type: string
       max_test_retries:
         description: "Retry budget for testing -> coding rework"
         default: "1"
+        type: string
       max_rework_cycles:
         description: "Rework cycles allowed after a rejected review"
         default: "0"
+        type: string
 
 permissions:
-  contents: write
-  issues: write
-  pull-requests: write
+  contents: read
+  issues: read
+  pull-requests: read
   actions: read
 
 engine: copilot
-
-network: defaults
-
 timeout-minutes: 30
 
 tools:
   github:
     allowed:
-      - get_issue
-      - add_issue_comment
-      - create_or_update_file
-      - create_pull_request
-      - get_pull_request
-      - list_pull_requests
+      - issue_read
+      - pull_request_read
   bash:
     - "python -m orchestrator*"
     - "python -m pytest*"
     - "pip install*"
-  edit:
+  edit: {}
 
 safe-outputs:
   add-comment:
@@ -57,12 +53,16 @@ product code yourself in the orchestration role: you delegate each stage to the 
 agent whose definition lives in `agents/<agent>.md`, validate the artifacts it returns, then
 decide to advance, retry, or stop.
 
+`github.event.issue.body` is blocked because untrusted issue content cannot be interpolated directly. Remove it and retrieve the body using `get_issue`.
+
+````markdown
 ## Request
 
 - Title: `${{ github.event.inputs.title || github.event.issue.title }}`
-- Body: `${{ github.event.issue.body }}`
+- For issue events, use the `get_issue` tool to retrieve the issue body.
 - Retry budget: `${{ github.event.inputs.max_test_retries || '1' }}` test retries,
   `${{ github.event.inputs.max_rework_cycles || '0' }}` rework cycles.
+````
 
 ## Stages (strictly in order)
 
